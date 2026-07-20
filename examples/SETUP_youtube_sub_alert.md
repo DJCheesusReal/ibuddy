@@ -2,7 +2,7 @@
 
 ## What It Does
 
-The i-Buddy goes WILD every time you gain a subscriber. Flaps wings, flashes the head LED, blinks the heart - as obnoxious as possible.
+The i-Buddy reacts every time you gain a subscriber. Flaps wings, flashes the head LED, blinks the heart.
 
 ## Requirements
 
@@ -52,7 +52,7 @@ python youtube_sub_alert.py --check 60    # Check every 60 seconds (default: 30)
 
 ## How It Works
 
-Polls the YouTube Data API every 30 seconds to check your subscriber count. When it increases, the i-Buddy celebrates. When it decreases (unsub), it notes it quietly.
+Polls the YouTube Data API every 30 seconds to check your subscriber count. When it increases, the i-Buddy celebrates.
 
 ## Notes
 
