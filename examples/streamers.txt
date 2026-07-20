@@ -1,0 +1,6 @@
+# List your favourite Twitch streamers here (one per line)
+# Lines starting with # are ignored
+
+shroud
+xqc
+kai cenat
