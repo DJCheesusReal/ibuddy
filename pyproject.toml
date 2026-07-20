@@ -1,0 +1,36 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ibuddy"
+version = "1.0.0"
+description = "Control the MSN i-Buddy USB figure from Python"
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+requires-python = ">=3.9"
+keywords = ["ibuddy", "i-buddy", "usb", "hid", "hardware"]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "Operating System :: Microsoft :: Windows",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: System :: Hardware",
+]
+dependencies = [
+    "pywinusb>=0.4.2",
+]
+
+[project.urls]
+Homepage = "https://github.com/DJche/ibuddy"
+Repository = "https://github.com/DJche/ibuddy"
+Issues = "https://github.com/DJche/ibuddy/issues"
+
+[tool.setuptools.packages.find]
+include = ["ibuddy*"]
