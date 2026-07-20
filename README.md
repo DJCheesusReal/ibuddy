@@ -1,6 +1,6 @@
 # ibuddy
 
-Control your MSN i-Buddy USB figure from Python.
+Control your MSN i-Buddy USB figure from Python and Discord.
 
 The i-Buddy is a small USB HID figure with a head LED (7 colors), heart light, flapping wings, and a swiveling torso. This library gives you full control over all of it.
 
@@ -21,24 +21,90 @@ with IBuddyDevice() as buddy:
 
 That's it. Plug in your i-Buddy, run the code, and watch it go.
 
-## Usage
+## Discord Integration
 
-### Connecting
+A [Vencord](https://vencord.dev/) plugin is included that makes your i-Buddy react to Discord activity:
 
-The library uses a context manager so the device is always properly reset when you're done:
+- **Voice call status** - Head LED changes color based on mute/deafen state (green = unmuted, red = muted, blue = deafened)
+- **DM notifications** - i-Buddy flaps, swivels, and blinks its heart when you receive a DM
+- **Priority contacts** - Heartbeat when specific users come online (like old MSN Messenger)
 
-```python
-from ibuddy import IBuddyDevice
+### Setup
 
-with IBuddyDevice() as buddy:
-    buddy.head_color("red")
-    buddy.flap(3)
-# Automatically resets and closes
+#### 1. Install the Python package
+
+```
+pip install ibuddy websockets
 ```
 
-### Head LED
+#### 2. Clone this repo
 
-Set the head to one of 7 named colors:
+```
+git clone https://github.com/djcheesusreal/ibuddy.git
+cd ibuddy
+```
+
+#### 3. Start the WebSocket server
+
+```
+python ibuddy_ws.py
+```
+
+This runs a local WebSocket server on `ws://127.0.0.1:8765` that the Vencord plugin connects to.
+
+#### 4. Install the Vencord plugin
+
+Copy the `vencord-plugin/` folder into your Vencord userplugins directory:
+
+```
+%AppData%\Roaming\Vencord\userplugins\iBuddy\
+```
+
+#### 5. Rebuild Vencord
+
+```
+cd C:\path\to\Vencord
+pnpm build
+```
+
+#### 6. Restart Discord
+
+Kill Discord completely from Task Manager (not just close the window), then relaunch it.
+
+#### 7. Enable the plugin
+
+Go to **Vencord Settings > Plugins** and enable **iBuddy**.
+
+### Plugin Settings
+
+| Setting | Description |
+|---------|-------------|
+| **WebSocket server URL** | `ws://127.0.0.1:8765` (default) |
+| **Path to python.exe** | `python` (default) |
+| **Path to ibuddy_ws.py** | Set this to where you cloned `ibuddy_ws.py` |
+| **Auto-start server** | Launch the Python server automatically when Discord loads |
+| **Message notifications** | Flap + swivel + heartbeat on new DMs |
+| **Priority contacts** | Comma-separated Discord user IDs — heartbeat when they come online |
+
+To find user IDs: enable Developer Mode in Discord (Settings > Advanced > Developer Mode), then right-click a user and click **Copy User ID**.
+
+### How it works
+
+```
+Discord (Vencord plugin)
+    |  WebSocket JSON commands
+    v
+ibuddy_ws.py
+    |  USB HID
+    v
+i-Buddy hardware
+```
+
+The plugin monitors Discord's internal flux events (mute state, incoming DMs, presence updates) and sends commands to the Python server, which controls the physical device. No Discord bot token required.
+
+## Library Usage
+
+### Head LED
 
 ```python
 buddy.head_color("red")         # Hold for 0.3s (default)
@@ -48,36 +114,24 @@ buddy.head_color("green", 0)    # Set and return immediately
 # Available colors: red, green, blue, cyan, magenta, yellow, white
 ```
 
-Or set raw RGB bits directly:
-
-```python
-buddy.set_head_color(1, 0, 0)  # Red (r=1, g=0, b=0)
-buddy._send()                   # Send the command
-```
-
 ### Heart LED
 
 ```python
 buddy.heart(True)         # Turn on for 0.3s
 buddy.heart(False)        # Turn off for 0.3s
-buddy.heart(True, 1.0)    # Stay on for 1 second
-buddy.heart(False, 0)     # Turn off immediately
-
-buddy.heartbeat(times=5, delay=0.2)  # Blink 5 times
+buddy.heartbeat(times=5)  # Blink 5 times
 ```
 
 ### Wings
 
 ```python
-buddy.flap(times=3, delay=0.15)  # Flap 3 times (default)
-buddy.flap(10, 0.1)              # Flap 10 times, faster
+buddy.flap(times=3, delay=0.15)  # Flap 3 times
 ```
 
 ### Torso Swivel
 
 ```python
-buddy.wiggle(times=3, delay=0.5)  # Wiggle left/right 3 times
-buddy.wiggle(5, 0.3)              # Faster wiggle
+buddy.wiggle(times=3, delay=0.5)  # Swivel left/right 3 times
 ```
 
 ### Combos
@@ -91,76 +145,27 @@ buddy.demo()                # Full demo of every feature
 ### Low-Level Control
 
 ```python
-buddy.set_wing(True)        # Wings up
-buddy.set_wing(False)       # Wings down
-buddy.set_swivel("left")    # Swivel left
-buddy.set_swivel("right")   # Swivel right
-buddy.set_heart(True)       # Heart on
-buddy.reset()               # Everything off
+buddy.set_head_color(1, 0, 0)  # Set raw RGB bits
+buddy.set_wing(True)            # Wings up
+buddy.set_swivel("left")       # Swivel left
+buddy.set_heart(True)           # Heart on
+buddy.reset()                   # Everything off
 ```
-
-After setting state manually, call `buddy._send()` to push it to the device.
-
-## API Reference
-
-### `IBuddyDevice(auto_reset=True)`
-
-Main device class. Connects to the i-Buddy on creation.
-
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| `auto_reset` | `bool` | `True` | Reset all outputs on connection |
-
-### High-Level Methods
-
-| Method | Parameters | Description |
-|--------|-----------|-------------|
-| `head_color(name, duration=0.3)` | color name, seconds | Set head LED color |
-| `heart(on, duration=0.3)` | bool, seconds | Turn heart on/off |
-| `flap(times=3, delay=0.15)` | count, seconds | Flap wings |
-| `wiggle(times=3, delay=0.5)` | count, seconds | Swivel torso |
-| `heartbeat(times=3, delay=0.2)` | count, seconds | Blink heart |
-| `rainbow(times=2, duration=0.3)` | cycles, seconds | Cycle all colors |
-| `celebrate()` | - | Party mode |
-| `demo()` | - | Full feature demo |
-| `reset()` | - | Turn everything off |
-
-### Low-Level Methods
-
-| Method | Parameters | Description |
-|--------|-----------|-------------|
-| `set_head_color(r, g, b)` | 0 or 1 each | Set raw RGB bits |
-| `set_heart(on)` | bool | Set heart state |
-| `set_wing(up)` | bool | Set wing position |
-| `set_swivel(direction)` | "left"/"right" | Set swivel direction |
-| `close()` | - | Reset and disconnect |
 
 ### Exceptions
 
 | Exception | When |
 |-----------|------|
-| `IBuddyError` | Base exception for all ibuddy errors |
+| `IBuddyError` | Base exception |
 | `IBuddyNotFoundError` | i-Buddy not plugged in |
 | `IBuddyConnectionError` | Device found but can't be opened |
 | `IBuddyInvalidColorError` | Unknown color name |
-
-### Available Colors
-
-| Name | RGB |
-|------|-----|
-| `red` | (1, 0, 0) |
-| `green` | (0, 1, 0) |
-| `blue` | (0, 0, 1) |
-| `cyan` | (0, 1, 1) |
-| `magenta` | (1, 0, 1) |
-| `yellow` | (1, 1, 0) |
-| `white` | (1, 1, 1) |
 
 ## Requirements
 
 - Windows
 - Python 3.9+
-- `pywinusb` (installed automatically)
+- [Vencord](https://vencord.dev/) (for Discord integration)
 
 ## License
 
