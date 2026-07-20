@@ -17,7 +17,7 @@ const settings = definePluginSettings({
     },
     scriptPath: {
         type: OptionType.STRING,
-        description: "Path to ibuddy_ws.py",
+        description: "Path to ibuddy_ws.py (leave blank to auto-install)",
         default: "",
     },
     autoStartServer: {
